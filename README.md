@@ -35,6 +35,10 @@ openssl req -new -key nats-key.pem -out nats.csr -subj "/CN=kube-nats" -config s
 openssl x509 -req -in nats.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out nats.pem -days 3650 -extensions v3_req -extfile ssl.cnf
 ```
 
+or exeucte `./configure` for generation certs into helm.
+
+**NOTE**: configure and package to helm chart only for development.
+
 Then, it's time to create a couple Kubernetes secrets to store the TLS artifacts:
 - `tls-nats-server` for the NATS server TLS setup
 - `tls-nats-client` for NATS client apps setup - one will need it to validate the self-signed certificate
@@ -80,6 +84,7 @@ $ kubectl logs -f nats-0
 [1] 2017/12/17 12:40:39.952594 [TRC] 10.244.1.4:46242 - rid:4 - ->> [PING]
 [1] 2017/12/17 12:40:39.952598 [TRC] 10.244.1.4:46242 - rid:4 - <<- [PONG]
 ```
+
 
 ## Scale
 
@@ -127,3 +132,11 @@ advantage decreases significantly and may even result in service downtime.
 
 It is then **highly recommended** that one adopts [pod anti-affinity](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity-beta-feature)
 in order to increase availability. This is enabled by default (see `nats.yml`).
+
+## Deploy use helm
+
+Deploy nats cluster
+
+```bash
+helm install --name my-release -f helm/values.yaml
+```

@@ -1,0 +1,42 @@
+#!/bin/sh
+
+PREFIX=helm/tls
+
+if [ -z $(command -v openssl) ]
+then
+  echo "Please check openssl"
+  exit 2
+fi
+
+mkdir -p $PREFIX
+
+echo "Generation cerst"
+
+echo -n "generate certs/ca-key.pem"
+openssl genrsa -out $PREFIX/ca-key.pem 2048
+echo "... ok"
+echo -n "generate $PREFIX/ca.pem"
+openssl req -x509 -new -nodes -key $PREFIX/ca-key.pem -days 10000 -out $PREFIX/ca.pem -subj "/CN=kube-ca"
+echo "... ok"
+echo "generate $PREFIX/nats-key.pem"
+openssl genrsa -out $PREFIX/nats-key.pem 2048
+echo "... ok"
+echo -n "generate $PREFIX/nats.csr"
+openssl req -new -key $PREFIX/nats-key.pem -out $PREFIX/nats.csr -subj "/CN=kube-nats" -config ssl.cnf
+echo "... ok"
+echo  "generate $PREFIX/nats.pem"
+openssl x509 -req -in $PREFIX/nats.csr -CA $PREFIX/ca.pem -CAkey $PREFIX/ca-key.pem -CAcreateserial -out $PREFIX/nats.pem -days 3650 -extensions v3_req -extfile ssl.cnf
+echo "... ok"
+
+echo -n "copy for server"
+mkdir -p helm/server
+for p in nats.pem nats-key.pem ca.pem
+do
+  cp $PREFIX/$p helm/server
+done
+echo "... ok"
+
+echo -n "copy for client"
+mkdir -p helm/client
+cp $PREFIX/ca.pem helm/client
+echo "... ok"

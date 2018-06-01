@@ -1,3 +1,6 @@
 *.pem
 *.csr
 *.srl
+helm/client
+helm/server
+helm/tls

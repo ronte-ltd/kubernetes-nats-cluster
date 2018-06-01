@@ -1,0 +1,24 @@
+{{- if .Values.service.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "nats.fullname" . }}
+  labels:
+    app: {{ template "nats.name" . }}
+    chart: {{ template "nats.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ template "nats.name" . }}
+spec:
+  clusterIP: None
+  ports:
+    {{- range $p := .Values.service.ports }}
+    - port: 
+      name: {{ $p.port.name }}
+      port: {{ $p.port.port }}
+    {{- end}}
+  selector:
+    app: {{ template "nats.name" . }}
+    release: {{ .Release.Name }}
+    component: {{ template "nats.name" . }}
+{{- end }}

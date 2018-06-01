@@ -1,0 +1,59 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.config.name }}
+  namespace: {{ .Values.config.namespace }}
+  labels:
+    app: {{ template "nats.name" . }}
+    chart: {{ template "nats.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    component: {{ template "nats.name" . }}
+spec:
+  serviceName: {{ template "nats.name" . }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        component: {{ template "nats.name" . }}
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                    - {{ template "nats.name" . }}
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: {{ template "nats.name" . }}
+        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        args: [ "--config", "/etc/nats/config/nats.conf" ]
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        volumeMounts:
+          - name: {{ .Values.secret.volume }}
+            mountPath: {{ .Values.secret.path }}
+          - name: {{ .Values.config.volume }}
+            mountPath: {{ .Values.config.path }}
+        ports:
+          {{- range $p := .Values.service.ports }}
+          - containerPort: {{$p.port.port}}
+            name: {{$p.port.name}}
+          {{- end }}
+        {{- if .Values.probe.enabled }}
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.probe.live.path }}
+            port: {{ .Values.probe.live.path }}
+          initialDelaySeconds: {{ .Values.probe.live.initialDelaySeconds }}
+          timeoutSeconds: {{ .Values.probe.live.timeoutSeconds }}
+        {{- end}}
+      volumes:
+      - name: {{ .Values.secret.volume }}
+        secret:
+          secretName: {{ .Values.secret.name }}
+      - name: {{ .Values.config.volume }}
+        configMap:
+          name: {{ .Values.config.name }}
