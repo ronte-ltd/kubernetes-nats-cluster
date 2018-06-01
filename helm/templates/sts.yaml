@@ -1,7 +1,7 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: {{ .Values.config.name }}
+  name: {{ template "nats.name" . }}
   namespace: {{ .Values.config.namespace }}
   labels:
     app: {{ template "nats.name" . }}
@@ -29,7 +29,7 @@ spec:
             topologyKey: kubernetes.io/hostname
       containers:
       - name: {{ template "nats.name" . }}
-        image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+        image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         args: [ "--config", "/etc/nats/config/nats.conf" ]
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         volumeMounts:
@@ -46,7 +46,7 @@ spec:
         livenessProbe:
           httpGet:
             path: {{ .Values.probe.live.path }}
-            port: {{ .Values.probe.live.path }}
+            port: {{ .Values.probe.live.port }}
           initialDelaySeconds: {{ .Values.probe.live.initialDelaySeconds }}
           timeoutSeconds: {{ .Values.probe.live.timeoutSeconds }}
         {{- end}}

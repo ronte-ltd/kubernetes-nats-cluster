@@ -28,13 +28,13 @@ cmd:
 
 config:
   enabled: true
-  name: nats-conf
+  name: nats.conf
   volume: config-volume
-  path: /etc/nats/conf
+  path: /etc/nats/config
 
 secret:
   enabled: true
-  name: nats-server
+  name: tls-nats-server
   volume: tls-volume
   path: /etc/nats/tls
   secrets:
